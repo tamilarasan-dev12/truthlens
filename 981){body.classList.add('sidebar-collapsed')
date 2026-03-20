@@ -1,1 +1,0 @@
-try{if(localStorage.getItem('truthlens-sidebar-collapsed')==='1'){if(window.innerWidth;}}}catch(error){} 
