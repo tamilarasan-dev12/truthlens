@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}TruthLens | Analyze{% endblock %}
+{% block page_eyebrow %}Analysis Studio{% endblock %}
+{% block page_heading %}Run a New Claim Analysis{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <article class="hero-banner hero-banner--compact glass-panel" data-searchable="analyze claim statement url">
+        <div class="hero-banner__copy">
+            <span class="hero-banner__pill">AI Analysis Workspace</span>
+            <h2>Paste a statement or provide a source URL to generate a production-style misinformation verdict.</h2>
+            <p>The model resolves the input, estimates claim confidence, and logs successful predictions for later audit on the History page.</p>
+        </div>
+    </article>
+
+    {% if error_message %}
+    <div class="alert-banner" data-searchable="{{ error_message }}">
+        <span class="alert-banner__icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 9v4m0 4h.01M10 4.8L3.5 16A2 2 0 005.2 19h13.6a2 2 0 001.7-3l-6.5-11.2a2 2 0 00-3.4 0z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+            </svg>
+        </span>
+        <div>
+            <strong>Unable to process that input</strong>
+            <p>{{ error_message }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="workspace-grid">
+        <article class="workspace-panel glass-panel">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Input Panel</p>
+                    <h2>Claim payload</h2>
+                </div>
+                <span class="panel-tag">Text or URL</span>
+            </div>
+
+            <form method="post" action="{{ url_for('main.analyze') }}" class="analyze-form" data-analyze-form>
+                <label class="field">
+                    <span class="field__label">Statement Text</span>
+                    <textarea
+                        id="text_input"
+                        name="text_input"
+                        rows="14"
+                        placeholder="Paste a headline, social post, speech excerpt, or any high-risk claim that needs verification..."
+                        data-text-input>{{ form_data.text_input }}</textarea>
+                    <span class="field__hint">Minimum 20 characters. Use direct claim language for cleaner classification.</span>
+                </label>
+
+                <div class="suggestion-row">
+                    <button class="suggestion-chip" type="button" data-prompt-chip="A viral post claims a city shut down all drinking water after a meteor shower.">
+                        Viral post
+                    </button>
+                    <button class="suggestion-chip" type="button" data-prompt-chip="A headline says a national health agency confirmed chocolate cures the flu in 24 hours.">
+                        Headline check
+                    </button>
+                    <button class="suggestion-chip" type="button" data-prompt-chip="An influencer claims a photo proves a world leader secretly approved a fabricated election result.">
+                        Narrative test
+                    </button>
+                </div>
+
+                <label class="field">
+                    <span class="field__label">Source URL</span>
+                    <input
+                        id="url_input"
+                        name="url_input"
+                        type="url"
+                        placeholder="https://example.com/article"
+                        value="{{ form_data.url_input }}">
+                    <span class="field__hint">Optional. If provided, TruthLens extracts page text before inference.</span>
+                </label>
+
+                <div class="form-footer">
+                    <div class="form-footer__meta">
+                        <span data-character-count>0 characters</span>
+                        <span>Auto-saved to history on success</span>
+                    </div>
+                    <button type="submit" class="button button--primary button--large" data-submit-button>
+                        <span>Analyze Statement</span>
+                    </button>
+                </div>
+            </form>
+        </article>
+
+        <div class="result-stack">
+            <article class="workspace-panel glass-panel result-panel {% if not result %}result-panel--idle{% endif %}" data-result-panel>
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Prediction Result</p>
+                        <h2>Inference summary</h2>
+                    </div>
+                    {% if result %}
+                    <span class="badge badge--{{ result.prediction|lower }}">{{ result.prediction }}</span>
+                    {% else %}
+                    <span class="panel-tag">Awaiting input</span>
+                    {% endif %}
+                </div>
+
+                {% if result %}
+                <div class="result-hero" data-searchable="{{ result.prediction }} {{ result.analyzed_text }}">
+                    <div>
+                        <p class="result-hero__label">Model verdict</p>
+                        <h3>{{ result.prediction }}</h3>
+                        <p class="result-hero__text">
+                            {% if result.prediction == "True" %}
+                            The model leans toward a credible statement based on the extracted language pattern.
+                            {% else %}
+                            The model detected a high likelihood of misinformation in the analyzed content.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="score-ring" style="--score: {{ (result.confidence * 100)|round(2) }};">
+                        <strong>{{ (result.confidence * 100)|round(0)|int }}%</strong>
+                        <span>Confidence</span>
+                    </div>
+                </div>
+
+                <div class="meter-group">
+                    <div class="meter-row">
+                        <span>Overall confidence</span>
+                        <strong>{{ (result.confidence * 100)|round(2) }}%</strong>
+                    </div>
+                    <div class="meter">
+                        <div class="meter__fill meter__fill--neutral" data-value="{{ (result.confidence * 100)|round(2) }}"></div>
+                    </div>
+                </div>
+
+                <div class="probability-grid">
+                    <div class="probability-card" data-searchable="fake probability {{ result.probabilities['Fake'] }}">
+                        <div class="meter-row">
+                            <span>Fake probability</span>
+                            <strong>{{ (result.probabilities['Fake'] * 100)|round(2) }}%</strong>
+                        </div>
+                        <div class="meter">
+                            <div class="meter__fill meter__fill--danger" data-value="{{ (result.probabilities['Fake'] * 100)|round(2) }}"></div>
+                        </div>
+                    </div>
+                    <div class="probability-card" data-searchable="true probability {{ result.probabilities['True'] }}">
+                        <div class="meter-row">
+                            <span>True probability</span>
+                            <strong>{{ (result.probabilities['True'] * 100)|round(2) }}%</strong>
+                        </div>
+                        <div class="meter">
+                            <div class="meter__fill meter__fill--success" data-value="{{ (result.probabilities['True'] * 100)|round(2) }}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-card" data-searchable="explanation rationale confidence result">
+                    <p class="eyebrow">Explanation</p>
+                    <h3>Decision rationale</h3>
+                    <p>
+                        TruthLens combines the resolved input text with the underlying classifier to estimate whether the statement resembles verified reporting or misinformation-like phrasing.
+                        {% if result.confidence >= 0.85 %}
+                        This prediction is high confidence and should be treated as a strong directional signal.
+                        {% elif result.confidence >= 0.65 %}
+                        This result is moderately confident and benefits from source-level review before action.
+                        {% else %}
+                        This result is lower confidence and should be considered an initial lead rather than a final decision.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="insight-card" data-searchable="{{ result.analyzed_text }}">
+                    <p class="eyebrow">Analyzed Content</p>
+                    <h3>Resolved text snapshot</h3>
+                    <p>{{ result.analyzed_text[:320] }}{% if result.analyzed_text|length > 320 %}...{% endif %}</p>
+                </div>
+                {% else %}
+                <div class="idle-state">
+                    <div class="skeleton-panel">
+                        <div class="skeleton-block skeleton-block--title"></div>
+                        <div class="skeleton-block"></div>
+                        <div class="skeleton-block"></div>
+                    </div>
+                    <div class="idle-state__copy">
+                        <h3>Ready for a new scan</h3>
+                        <p>Submit a statement or article URL to reveal prediction badges, animated confidence bars, and a narrative explanation panel.</p>
+                    </div>
+                </div>
+                {% endif %}
+            </article>
+        </div>
+    </div>
+</section>
+{% endblock %}

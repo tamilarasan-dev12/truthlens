@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}TruthLens | Dashboard{% endblock %}
+{% block page_eyebrow %}Control Center{% endblock %}
+{% block page_heading %}Misinformation Command Center{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <article class="hero-banner glass-panel" data-searchable="dashboard analytics confidence activity fake true ratio">
+        <div class="hero-banner__copy">
+            <span class="hero-banner__pill">Realtime Trust Monitoring</span>
+            <h2>Track misinformation exposure, model confidence, and latest classification outcomes from one clean operator view.</h2>
+            <p>TruthLens combines analysis volume, verdict mix, and recent claim traffic into a production-grade dashboard built for rapid review.</p>
+        </div>
+        <div class="hero-banner__meta">
+            <div class="metric-chip">
+                <strong>{{ metrics.total_predictions }}</strong>
+                <span>Total logged analyses</span>
+            </div>
+            <div class="metric-chip metric-chip--success">
+                <strong>{{ (metrics.true_ratio * 100)|round(0)|int }}%</strong>
+                <span>True signal rate</span>
+            </div>
+            <div class="metric-chip metric-chip--danger">
+                <strong>{{ (metrics.fake_ratio * 100)|round(0)|int }}%</strong>
+                <span>Fake signal rate</span>
+            </div>
+        </div>
+    </article>
+
+    <div class="stats-grid">
+        <article class="stat-card glass-panel" data-searchable="total analyses volume predictions">
+            <div class="stat-card__head">
+                <p>Total Analyses</p>
+                <span class="stat-card__icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M5 12h4v7H5zm5-5h4v12h-4zm5-3h4v15h-4z" fill="currentColor"></path>
+                    </svg>
+                </span>
+            </div>
+            <h3>{{ metrics.total_predictions }}</h3>
+            <p class="stat-card__detail">Persistent claim scans recorded inside the TruthLens audit trail.</p>
+        </article>
+
+        <article class="stat-card glass-panel" data-searchable="average confidence score model certainty">
+            <div class="stat-card__head">
+                <p>Avg Confidence</p>
+                <span class="stat-card__icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3l7 4v5c0 4.4-2.8 8.4-7 9-4.2-.6-7-4.6-7-9V7z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.6"></path>
+                        <path d="M9 12l2 2 4-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"></path>
+                    </svg>
+                </span>
+            </div>
+            <h3>{{ (metrics.avg_confidence * 100)|round(2) }}%</h3>
+            <p class="stat-card__detail">Mean probability confidence across every stored classification result.</p>
+        </article>
+
+        <article class="stat-card glass-panel" data-searchable="fake true ratio verdict mix">
+            <div class="stat-card__head">
+                <p>Fake vs True Ratio</p>
+                <span class="stat-card__icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 12h7M13 7h7M13 17h7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"></path>
+                        <circle cx="8" cy="12" r="2" fill="currentColor"></circle>
+                        <circle cx="13" cy="7" r="2" fill="currentColor"></circle>
+                        <circle cx="16" cy="17" r="2" fill="currentColor"></circle>
+                    </svg>
+                </span>
+            </div>
+            <h3>{{ (metrics.fake_ratio * 100)|round(0)|int }} / {{ (metrics.true_ratio * 100)|round(0)|int }}</h3>
+            <div class="stacked-meter">
+                <span class="stacked-meter__segment stacked-meter__segment--danger" style="width: {{ (metrics.fake_ratio * 100)|round(2) }}%"></span>
+                <span class="stacked-meter__segment stacked-meter__segment--success" style="width: {{ (metrics.true_ratio * 100)|round(2) }}%"></span>
+            </div>
+            <p class="stat-card__detail">Current verdict distribution between misinformation and verified signals.</p>
+        </article>
+
+        <article class="stat-card glass-panel" data-searchable="trusted outcomes true count">
+            <div class="stat-card__head">
+                <p>Trusted Outcomes</p>
+                <span class="stat-card__icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 4l7 3v5c0 4.6-3 8.6-7 9.8C8 20.6 5 16.6 5 12V7z" fill="currentColor" opacity=".14"></path>
+                        <path d="M9 12.5l2 2 4-4.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+                    </svg>
+                </span>
+            </div>
+            <h3>{{ metrics.true_count }}</h3>
+            <p class="stat-card__detail">Analyses currently classified as true after model inference.</p>
+        </article>
+    </div>
+
+    <div class="dashboard-grid">
+        <article class="chart-card chart-card--wide glass-panel" data-searchable="confidence trend chart recent activity">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Signal Trend</p>
+                    <h2>Recent confidence movement</h2>
+                </div>
+                <a class="button button--ghost" href="{{ url_for('main.history') }}">Open history</a>
+            </div>
+
+            <div class="chart-frame {% if not metrics.recent_activity %}chart-frame--empty{% endif %}">
+                <canvas
+                    class="chart-canvas"
+                    data-chart="confidence-trend"
+                    data-labels="{% for item in metrics.recent_activity|reverse %}{{ item.created_at }}{% if not loop.last %}|{% endif %}{% endfor %}"
+                    data-values="{% for item in metrics.recent_activity|reverse %}{{ (item.confidence * 100)|round(2) }}{% if not loop.last %}|{% endif %}{% endfor %}">
+                </canvas>
+                {% if not metrics.recent_activity %}
+                <div class="empty-state">
+                    <div class="empty-state__graphic">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <h3>No signal trend yet</h3>
+                    <p>Run analyses to populate your rolling confidence chart.</p>
+                </div>
+                {% endif %}
+            </div>
+        </article>
+
+        <article class="chart-card glass-panel" data-searchable="verdict distribution donut chart fake true">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Verdict Mix</p>
+                    <h2>Fake vs True distribution</h2>
+                </div>
+            </div>
+
+            <div class="chart-frame {% if not metrics.total_predictions %}chart-frame--empty{% endif %}">
+                <canvas
+                    class="chart-canvas"
+                    data-chart="verdict-share"
+                    data-labels="Fake|True"
+                    data-values="{{ metrics.fake_count }}|{{ metrics.true_count }}">
+                </canvas>
+                {% if not metrics.total_predictions %}
+                <div class="empty-state empty-state--compact">
+                    <h3>Distribution unavailable</h3>
+                    <p>Claim volume is still empty.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mini-legend">
+                <div class="mini-legend__item">
+                    <span class="mini-legend__swatch mini-legend__swatch--danger"></span>
+                    <div>
+                        <strong>{{ metrics.fake_count }}</strong>
+                        <small>Fake classifications</small>
+                    </div>
+                </div>
+                <div class="mini-legend__item">
+                    <span class="mini-legend__swatch mini-legend__swatch--success"></span>
+                    <div>
+                        <strong>{{ metrics.true_count }}</strong>
+                        <small>True classifications</small>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="activity-card glass-panel" data-searchable="recent activity feed latest analyses">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Recent Activity</p>
+                    <h2>Latest classification log</h2>
+                </div>
+                <a class="button button--ghost" href="{{ url_for('main.analyze') }}">New analysis</a>
+            </div>
+
+            <div class="activity-feed">
+                {% for row in metrics.recent_activity %}
+                <article class="activity-item" data-searchable="{{ row.text }} {{ row.prediction }} {{ row.created_at }}">
+                    <div class="activity-item__summary">
+                        <span class="badge badge--{{ row.prediction|lower }}">{{ row.prediction }}</span>
+                        <h3>{{ row.text[:110] }}{% if row.text|length > 110 %}...{% endif %}</h3>
+                        <p>Confidence {{ (row.confidence * 100)|round(2) }}%</p>
+                    </div>
+                    <span class="activity-item__time">{{ row.created_at }}</span>
+                </article>
+                {% else %}
+                <div class="empty-state empty-state--feed">
+                    <div class="skeleton-block skeleton-block--title"></div>
+                    <div class="skeleton-block"></div>
+                    <div class="skeleton-block"></div>
+                    <p>Analyses will appear here as soon as new claims are processed.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+    </div>
+</section>
+{% endblock %}

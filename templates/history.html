@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}TruthLens | History{% endblock %}
+{% block page_eyebrow %}Audit Trail{% endblock %}
+{% block page_heading %}Analysis History{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <article class="hero-banner hero-banner--compact glass-panel" data-searchable="history records audit trail">
+        <div class="hero-banner__copy">
+            <span class="hero-banner__pill">Persistent Review Layer</span>
+            <h2>Review every stored classification with a dense, recruiter-grade audit table built for fast scanning.</h2>
+            <p>The table below is optimized for clarity: sticky headers, scroll containment, readable confidence signals, and direct visual separation between fake and true verdicts.</p>
+        </div>
+        <div class="hero-banner__meta">
+            <div class="metric-chip">
+                <strong>{{ records|length }}</strong>
+                <span>Rows loaded</span>
+            </div>
+            <div class="metric-chip">
+                <strong>500</strong>
+                <span>Max fetch window</span>
+            </div>
+        </div>
+    </article>
+
+    <article class="table-shell glass-panel">
+        <div class="table-shell__header">
+            <div>
+                <p class="eyebrow">History Ledger</p>
+                <h2>Claim analysis records</h2>
+            </div>
+            <a class="button button--primary" href="{{ url_for('main.analyze') }}">Analyze another claim</a>
+        </div>
+
+        <div class="table-scroll">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Statement</th>
+                        <th>Prediction</th>
+                        <th>Confidence</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in records %}
+                    <tr data-searchable="{{ row.id }} {{ row.text }} {{ row.prediction }} {{ row.created_at }}">
+                        <td class="history-table__mono">#{{ row.id }}</td>
+                        <td class="history-table__statement">
+                            <strong>{{ row.text[:92] }}{% if row.text|length > 92 %}...{% endif %}</strong>
+                            <p>{{ row.text[:170] }}{% if row.text|length > 170 %}...{% endif %}</p>
+                        </td>
+                        <td>
+                            <span class="badge badge--{{ row.prediction|lower }}">{{ row.prediction }}</span>
+                        </td>
+                        <td>
+                            <div class="confidence-cell">
+                                <div class="meter-row">
+                                    <span>{{ (row.confidence * 100)|round(2) }}%</span>
+                                </div>
+                                <div class="meter meter--compact">
+                                    <div
+                                        class="meter__fill {% if row.prediction == 'True' %}meter__fill--success{% else %}meter__fill--danger{% endif %}"
+                                        data-value="{{ (row.confidence * 100)|round(2) }}"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="history-table__time">{{ row.created_at }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state empty-state--table">
+                                <div class="skeleton-panel">
+                                    <div class="skeleton-block skeleton-block--title"></div>
+                                    <div class="skeleton-block"></div>
+                                    <div class="skeleton-block"></div>
+                                </div>
+                                <h3>No history records found</h3>
+                                <p>Run a claim analysis to begin building your TruthLens audit trail.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
+{% endblock %}

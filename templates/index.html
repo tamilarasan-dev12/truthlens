@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="mb-4">
+        <h2 class="font-outfit text-2xl mb-1">Deep Statement Engine</h2>
+        <p class="text-muted text-sm">Input a text fragment below to utilize the FeatureUnion AI pipeline.</p>
+    </div>
+
+    <div class="two-col-layout" style="grid-template-columns: 1fr 1fr;">
+        <!-- Left: Input -->
+        <div class="enter-card hover-glow">
+            <h3 class="font-outfit text-lg mb-2">Statement Analysis</h3>
+            <form id="analyze-form" method="POST" action="{{ url_for('main.index') }}">
+                <div class="mb-2">
+                    <textarea 
+                        name="statement" 
+                        class="modern-input" 
+                        style="height: 180px; resize: vertical;" 
+                        placeholder="Enter statement, news headline, or raw text fragment here..." 
+                        required>{% if result %}{{ result.statement }}{% endif %}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="analyze-btn">
+                    <i class="fa-solid fa-bolt btn-icon"></i>
+                    <span class="btn-text">Execute AI Analysis</span>
+                    <div class="spinner" style="display: none;"></div>
+                </button>
+            </form>
+        </div>
+
+        <!-- Right: Output -->
+        <div class="enter-card" style="display: flex; flex-direction: column;">
+            <h3 class="font-outfit text-lg mb-2">Engine Output</h3>
+            
+            {% if result %}
+                {% if not result.success %}
+                <div style="background: var(--danger-bg); border: 1px solid var(--danger); padding: 1.5rem; border-radius: var(--radius-md); text-align: center;">
+                    <i class="fa-solid fa-triangle-exclamation text-danger" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <h4 class="text-danger font-outfit mb-1">Analysis Failed</h4>
+                    <p class="text-sm" style="color: #fca5a5;">{{ result.error_message }}</p>
+                </div>
+                {% else %}
+                <div class="fade-in" style="flex: 1; display: flex; flex-direction: column;">
+                    <div class="flex justify-between items-center mb-2" style="padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+                        <span class="text-muted text-sm uppercase tracking-wide">Final Classification</span>
+                        <span class="badge {{ result.prediction|lower }}">{{ result.prediction }}</span>
+                    </div>
+                    
+                    <div class="mb-2" style="padding-top: 1rem;">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm font-semibold">Overall Confidence Score</span>
+                            <span class="text-sm font-bold">{{ result.confidence }}%</span>
+                        </div>
+                        <div style="width: 100%; height: 8px; background: rgba(31, 41, 55, 0.8); border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; width: {{ result.confidence }}%; transition: width 1s ease;" 
+                                 class="{% if result.prediction|lower == 'true' %}bg-success{% else %}bg-danger{% endif %}"></div>
+                        </div>
+                    </div>
+
+                    {% if result.probabilities %}
+                    <div class="mb-2 mt-4">
+                        <h4 class="font-outfit text-sm text-muted uppercase tracking-wide mb-2">Probability Distribution</h4>
+                        <div style="display: flex; gap: 1rem;">
+                            <div style="flex: 1; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
+                                <div class="text-success text-xl font-bold font-outfit mb-1">{{ result.probabilities['True'] }}%</div>
+                                <div class="text-xs text-muted">TRUE SIGNAL</div>
+                            </div>
+                            <div style="flex: 1; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
+                                <div class="text-danger text-xl font-bold font-outfit mb-1">{{ result.probabilities['Fake'] }}%</div>
+                                <div class="text-xs text-muted">FAKE SIGNAL</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if result.linguistic_features %}
+                    <div class="mt-4">
+                        <h4 class="font-outfit text-sm text-muted uppercase tracking-wide mb-2">Linguistic Feature Extraction</h4>
+                        <div style="background: var(--bg-surface-elevated); border-radius: 8px; border: 1px solid var(--border-highlight); padding: 0.75rem;">
+                            <ul style="list-style: none; font-size: 0.85rem;">
+                                <li class="flex justify-between" style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                    <span class="text-muted">Token Count</span>
+                                    <span>{{ result.linguistic_features.word_count }}</span>
+                                </li>
+                                <li class="flex justify-between" style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                    <span class="text-muted">Avg Word Length</span>
+                                    <span>{{ result.linguistic_features.avg_word_length }} char</span>
+                                </li>
+                                <li class="flex justify-between" style="padding: 0.5rem 0;">
+                                    <span class="text-muted">Punctuation Density</span>
+                                    <span>{{ result.linguistic_features.punctuation_density }}%</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% else %}
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); padding: 4rem 1rem; text-align: center;">
+                    <i class="fa-solid fa-robot" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>Engine idle. Submit a statement to view extraction metrics and probabilities.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-success { background: linear-gradient(90deg, #064e3b, var(--success)); }
+    .bg-danger { background: linear-gradient(90deg, #7f1d1d, var(--danger)); }
+    .mt-4 { margin-top: 1.5rem; }
+    .text-xl { font-size: 1.5rem; }
+    .text-xs { font-size: 0.75rem; }
+    .font-semibold { font-weight: 600; }
+    .font-bold { font-weight: 700; }
+    .tracking-wide { letter-spacing: 0.05em; }
+    .uppercase { text-transform: uppercase; }
+</style>
+{% endblock %}

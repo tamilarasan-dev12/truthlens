@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}TruthLens{% endblock %}</title>
+    <meta name="theme-color" content="#0B0F19">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="app-shell" data-page="{{ request.endpoint }}">
+    <div class="app-background" aria-hidden="true">
+        <div class="app-background__orb app-background__orb--one"></div>
+        <div class="app-background__orb app-background__orb--two"></div>
+        <div class="app-background__grid"></div>
+    </div>
+
+    <div class="app-layout">
+        <div class="sidebar-overlay" data-sidebar-overlay></div>
+
+        <aside class="sidebar glass-panel" id="appSidebar">
+            <div class="sidebar__header">
+                <a class="brand" href="{{ url_for('main.history') }}">
+                    <span class="brand__mark">TL</span>
+                    <span class="brand__copy">
+                        <strong>TruthLens</strong>
+                        <small>AI trust intelligence</small>
+                    </span>
+                </a>
+                <button class="icon-button sidebar__collapse" type="button" data-sidebar-collapse aria-label="Collapse sidebar">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="sidebar__section">
+                <p class="sidebar__eyebrow">Workspace</p>
+                <nav class="sidebar__nav" aria-label="Primary">
+                    <a class="nav-link {% if request.endpoint == 'main.history' %}is-active{% endif %}" href="{{ url_for('main.history') }}">
+                        <span class="nav-link__icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M4 13h7V4H4zm9 7h7v-9h-7zM4 20h7v-5H4zm9-9h7V4h-7z" fill="currentColor"></path>
+                            </svg>
+                        </span>
+                        <span class="nav-link__copy">
+                            <strong>History</strong>
+                            <small>Inspect prior analyses</small>
+                        </span>
+                    </a>
+                    <a class="nav-link {% if request.endpoint == 'main.analyze' %}is-active{% endif %}" href="{{ url_for('main.analyze') }}">
+                        <span class="nav-link__icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 3l1.9 5.8L20 10l-4.6 3.5L17 20l-5-3.4L7 20l1.6-6.5L4 10l6.1-1.2z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.6"></path>
+                            </svg>
+                        </span>
+                        <span class="nav-link__copy">
+                            <strong>Analyze</strong>
+                            <small>Run a new claim scan</small>
+                        </span>
+                    </a>
+                    <a class="nav-link {% if request.endpoint == 'main.history' %}is-active{% endif %}" href="{{ url_for('main.history') }}">
+                        <span class="nav-link__icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 8v5l3 2M20 12a8 8 0 11-2.3-5.7L20 4v5h-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"></path>
+                            </svg>
+                        </span>
+                        <span class="nav-link__copy">
+                            <strong>History</strong>
+                            <small>Inspect prior analyses</small>
+                        </span>
+                    </a>
+                    <button class="nav-link nav-link--button" type="button" data-open-docs>
+                        <span class="nav-link__icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M6 4.8A2.8 2.8 0 018.8 2H19v18H8.8A2.8 2.8 0 016 17.2zm0 0V18m0-13.2A2.8 2.8 0 018.8 7H19" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"></path>
+                            </svg>
+                        </span>
+                        <span class="nav-link__copy">
+                            <strong>API Docs</strong>
+                            <small>Payloads and examples</small>
+                        </span>
+                    </button>
+                </nav>
+            </div>
+
+            <div class="sidebar__section sidebar__section--spaced">
+                <div class="status-card">
+                    <div class="status-card__head">
+                        <span class="status-dot"></span>
+                        <p>Model health</p>
+                    </div>
+                    <h3>Realtime inference ready</h3>
+                    <p>TruthLens is configured for live claim classification, confidence scoring, and history logging.</p>
+                    <div class="status-card__meta">
+                        <span>Dark mode</span>
+                        <span>v1 Predict API</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="app-main">
+            <header class="topbar glass-panel">
+                <div class="topbar__intro">
+                    <button class="icon-button topbar__menu" type="button" data-sidebar-open aria-label="Open sidebar">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"></path>
+                        </svg>
+                    </button>
+                    <div>
+                        <p class="eyebrow">{% block page_eyebrow %}TruthLens Platform{% endblock %}</p>
+                        <h1 class="page-heading">{% block page_heading %}Decision Intelligence{% endblock %}</h1>
+                    </div>
+                </div>
+
+                <div class="topbar__actions">
+                    <label class="search-field" aria-label="Search">
+                        <span class="search-field__icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M11 18a7 7 0 100-14 7 7 0 000 14zm9 3l-4.3-4.3" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"></path>
+                            </svg>
+                        </span>
+                        <input type="search" placeholder="Search activity, records, docs" data-app-search>
+                        <span class="search-field__shortcut">/</span>
+                    </label>
+
+                    <button class="icon-button" type="button" data-open-notifications aria-label="Open notifications">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M15 17H5.8A1.8 1.8 0 014 15.2V14l1.5-1.8V9a6.5 6.5 0 1113 0v3.2L20 14v1.2a1.8 1.8 0 01-1.8 1.8H15m0 0a3 3 0 01-6 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"></path>
+                        </svg>
+                    </button>
+
+                    <div class="profile-menu">
+                        <button class="avatar-button" type="button" data-avatar-toggle aria-expanded="false">
+                            <span class="avatar-button__meta">
+                                <small>Ops lead</small>
+                                <strong>truthlens.io</strong>
+                            </span>
+                            <span class="avatar-button__avatar">TL</span>
+                        </button>
+
+                        <div class="dropdown-panel" data-avatar-menu>
+                            <a href="{{ url_for('main.history') }}">Overview</a>
+                            <a href="{{ url_for('main.history') }}">Audit trail</a>
+                            <button type="button" data-open-docs>Developer docs</button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="content-view">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <div class="drawer-backdrop" data-drawer-overlay></div>
+
+    <aside class="side-drawer glass-panel" id="docsDrawer" aria-hidden="true">
+        <div class="drawer__header">
+            <div>
+                <p class="eyebrow">API Docs</p>
+                <h2>Prediction Endpoint</h2>
+            </div>
+            <button class="icon-button" type="button" data-close-docs aria-label="Close API docs">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="drawer__body">
+            <div class="doc-card" data-searchable="POST api v1 predict endpoint text url json">
+                <span class="doc-card__badge">POST</span>
+                <h3><code>/api/v1/predict</code></h3>
+                <p>Submit either raw statement text or a source URL. TruthLens resolves input, scores the claim, and stores the result in history.</p>
+                <ul class="doc-list">
+                    <li>Content-Type: <code>application/json</code></li>
+                    <li>Accepted keys: <code>text</code>, <code>url</code></li>
+                    <li>Response: status envelope with prediction payload</li>
+                </ul>
+            </div>
+
+            <div class="doc-card" data-searchable="curl request example analyze prediction">
+                <p class="doc-section-title">Example Request</p>
+                <pre><code>curl -X POST http://localhost:5000/api/v1/predict ^
+  -H "Content-Type: application/json" ^
+  -d "{\"text\": \"A viral post claims a city banned tap water after a meteor impact.\"}"</code></pre>
+            </div>
+
+            <div class="doc-card" data-searchable="json response confidence probabilities fake true">
+                <p class="doc-section-title">Example Response</p>
+                <pre><code>{
+  "status": "success",
+  "data": {
+    "prediction": "Fake",
+    "confidence": 0.91,
+    "probabilities": {
+      "Fake": 0.91,
+      "True": 0.09
+    },
+    "analyzed_text": "..."
+  },
+  "error": null
+}</code></pre>
+            </div>
+
+            <div class="doc-card" data-searchable="validation notes short text invalid url history storage">
+                <p class="doc-section-title">Validation Notes</p>
+                <ul class="doc-list">
+                    <li>Text input must contain at least 20 characters.</li>
+                    <li>URLs must begin with <code>http://</code> or <code>https://</code>.</li>
+                    <li>Remote page content is extracted before analysis.</li>
+                    <li>Successful predictions are automatically appended to history.</li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+
+    <aside class="notifications-panel glass-panel" id="notificationsPanel" aria-hidden="true">
+        <div class="notifications-panel__header">
+            <div>
+                <p class="eyebrow">Notifications</p>
+                <h2>Signal Summary</h2>
+            </div>
+            <button class="icon-button" type="button" data-close-notifications aria-label="Close notifications">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="notifications-panel__body">
+            <article class="notice-card" data-searchable="system ready model status">
+                <span class="notice-card__icon notice-card__icon--success"></span>
+                <div>
+                    <h3>Model is ready for inference</h3>
+                    <p>Prediction services are available and the audit log is active.</p>
+                </div>
+            </article>
+            <article class="notice-card" data-searchable="history tracking dashboard analytics">
+                <span class="notice-card__icon"></span>
+                <div>
+                    <h3>History tracking enabled</h3>
+                    <p>Every successful analysis is persisted for downstream review on the History page.</p>
+                </div>
+            </article>
+            <article class="notice-card" data-searchable="developer docs api payload">
+                <span class="notice-card__icon notice-card__icon--accent"></span>
+                <div>
+                    <h3>Developer docs available</h3>
+                    <p>Open the API drawer from the sidebar to inspect request and response contracts.</p>
+                </div>
+            </article>
+        </div>
+    </aside>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
