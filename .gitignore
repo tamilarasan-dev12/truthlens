@@ -1,0 +1,13 @@
+venv/
+__pycache__/
+*.pyc
+
+.env
+
+instance/
+*.db
+
+ml/*.pkl
+models/*.pkl
+
+node_modules/
